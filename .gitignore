@@ -22,3 +22,7 @@ Thumbs.db
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Supabase CLI local state (branches, temp containers, differ output)
+supabase/.temp/
+supabase/.branches/
