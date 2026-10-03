@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Checks: `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run verify:backend` (13 backend checks, no secrets needed).
+Checks: `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run verify:backend` (14 backend checks, no secrets needed).
 
 Without Supabase env vars the app runs in demo mode (local catalog + localStorage orders). With `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set, it uses Google OAuth, server-side checkout, and persistent per-user order history.
 

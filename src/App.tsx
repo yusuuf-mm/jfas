@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowLeft, ArrowRight, Check, ChevronDown, Menu, Minus, Plus, ShoppingBag, X } from 'lucide-react'
 import { naira, products as demoProducts, type Product } from './data'
 import { useAuth } from './lib/useAuth'
-import { isBackendConfigured } from './lib/supabase'
+import { isBackendConfigured, isProduction } from './lib/supabase'
 import {
   BackendError,
   createServerOrder,
@@ -127,7 +127,12 @@ export default function App() {
     setEmailWarning('')
     if (cart.length === 0) { setCheckoutError('Your bag is empty'); return }
     if (!contact.email.trim()) { setCheckoutError('Enter your email to continue'); return }
-    if (!isBackendConfigured) { finishDemoOrder(); return }
+    if (!isBackendConfigured) {
+      // Production never takes fake demo orders; dev keeps the offline fallback.
+      if (isProduction) { setCheckoutError('Checkout is unavailable right now. Please try again shortly.'); return }
+      finishDemoOrder()
+      return
+    }
     if (!auth.user) { setCheckoutError('Sign in with Google to place an order'); return }
     setPlacing(true)
     try {
@@ -175,7 +180,9 @@ export default function App() {
   }
 
   const ordersNote = !isBackendConfigured
-    ? 'Demo mode: orders are stored only in this browser. Connect Supabase to sign in and keep them across sessions.'
+    ? isProduction
+      ? 'Order history is currently unavailable. Please check back shortly.'
+      : 'Demo mode: orders are stored only in this browser. Connect Supabase to sign in and keep them across sessions.'
     : auth.loading
       ? 'Checking your session…'
       : auth.user
@@ -243,7 +250,9 @@ export default function App() {
                     ? auth.user
                       ? 'Your total is verified by our server and your receipt is emailed after checkout.'
                       : 'Sign in with Google to place a secure order — your total is verified server-side.'
-                    : 'Sign-in will be connected to Supabase. Enter your email to prepare this demo order.'}
+                    : isProduction
+                      ? 'Checkout is currently unavailable. Please check back shortly.'
+                      : 'Sign-in will be connected to Supabase. Enter your email to prepare this demo order.'}
                 </p>
                 {isBackendConfigured && !auth.loading && !auth.user && (
                   <button className="dark-button" onClick={openAuth}>Sign in with Google <ArrowRight size={15} /></button>
@@ -274,9 +283,9 @@ export default function App() {
                 <div className="summary-total"><span>Estimated subtotal</span><b>{naira(subtotal)}</b></div>
                 <div className="summary-total muted"><span>Delivery</span><span>Calculated by the server</span></div>
                 <button className="dark-button full" disabled={placing} onClick={() => void placeOrder()}>
-                  {placing ? 'Placing your order…' : isBackendConfigured ? 'Place secure order' : 'Place demo order'} <ArrowRight size={15} />
+                  {placing ? 'Placing your order…' : isBackendConfigured ? 'Place secure order' : isProduction ? 'Checkout unavailable' : 'Place demo order'} <ArrowRight size={15} />
                 </button>
-                <small className="secure-note">Your final total and order are verified by our server at checkout.</small>
+                {isBackendConfigured && <small className="secure-note">Your final total and order are verified by our server at checkout.</small>}
               </aside>
             </div>
           </section>
@@ -388,6 +397,11 @@ export default function App() {
               <button className="dark-button full" disabled={auth.loading} onClick={() => void handleSignIn()}>
                 {auth.loading ? 'Checking your session…' : 'Continue with Google'} <ArrowRight size={15} />
               </button>
+            ) : isProduction ? (
+              <div className="auth-setup" role="status">
+                <strong>Sign-in is unavailable</strong>
+                <span>We are having trouble reaching our sign-in service. Please try again shortly.</span>
+              </div>
             ) : (
               <div className="auth-setup" role="status">
                 <strong>Google sign-in needs setup</strong>

@@ -16,7 +16,7 @@ J-FAS is a minimal luxury, editorial jewelry/fashion e-commerce storefront for t
 - `src/lib/useAuth.ts`: Google OAuth session state (sign in/out, persistence via Supabase Auth).
 - `src/lib/shopApi.ts`: `loadCatalog`, `createServerOrder` (Edge Function `create-order`), `fetchOrderHistory` (RLS-protected reads), `resendConfirmation` (email-only retry, never duplicates orders).
 - `src/lib/orderValidation.ts`: pure mirror of server checkout rules for previews/tests; the Edge Function + `create_order` RPC are authoritative.
-- `src/App.tsx`: storefront UI with auth-aware checkout/order history; demo localStorage flow retained only when backend is unconfigured.
+- `src/App.tsx`: storefront UI with auth-aware checkout/order history; demo localStorage flow retained only when backend is unconfigured. Production builds (`isProduction`) never take demo orders and show service-unavailable copy instead of dev setup instructions.
 - `src/styles.css`: design tokens, responsive layouts, component styling.
 - `supabase/migrations/0001_jfas_init.sql`: `profiles`, `products`, `orders`, `order_items` with PKs/FKs/checks/indexes, RLS (users read only own orders/items), `handle_new_user` profile trigger, SECURITY DEFINER `create_order` RPC, `decrement_stock` helper, demo seed data.
 - `supabase/migrations/0002_atomic_checkout.sql`: replaces `create_order` with the production checkout transaction: locks stock rows, validates IDs and quantities, computes trusted totals, then inserts the order, inserts lines, and decrements stock atomically.
@@ -40,7 +40,7 @@ Minimal luxury/editorial: warm paper and sand palette, restrained serif display 
 ## Current implementation status
 - Implemented storefront, category filters, product detail, add-to-cart, quantity editing/removal, persisted cart, checkout form shell, demo order confirmation and local order history, mobile menu, empty states, newsletter interaction, responsive footer, a dedicated Google account dialog, Escape-to-close + focus handling on overlays, honest demo-mode copy, and favicon/social meta.
 - Backend integration implemented: Google OAuth sign in/out with persisted sessions, Supabase catalog reads (fallback to demo catalog), authenticated server-side checkout (trusted prices/totals, stock checks, atomic order + items), per-user RLS order history that survives logout/re-login, MailerSend confirmation email with email-only retry.
-- Verified: `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run verify:backend` (13 checks) all pass.
+- Verified: `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run verify:backend` (14 checks) all pass.
 - Live end-to-end (Supabase project, OAuth, deployed functions, email delivery) is pending manual configuration below.
 
 ## Manual configuration remaining (nothing else is code)
@@ -65,7 +65,7 @@ Minimal luxury/editorial: warm paper and sand palette, restrained serif display 
 - `npm run lint` — ESLint
 - `npm run typecheck` — TypeScript project check
 - `npm run build` — typecheck and production build
-- `npm run verify:backend` — 13 backend verification checks (no secrets needed)
+- `npm run verify:backend` — 14 backend verification checks (no secrets needed)
 
 ## Remaining backend dependencies
 Live Supabase project URL/key, applied migration, Google OAuth provider setup, deployed Edge Functions, and MailerSend API key + verified sender domain are pending (manual steps above). `.env.example` intentionally contains placeholders only; store real values in ignored local files or Supabase Function secrets. No code work remains for the required flow.

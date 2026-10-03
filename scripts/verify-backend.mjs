@@ -145,6 +145,16 @@ describe('J-FAS backend verification', () => {
     assert.ok(!/=sk-|\bsecret\b/i.test(env.replace(/where .* secret/i, '')), 'no secret values allowed')
   })
 
+  it('production never takes demo orders or shows dev setup copy', () => {
+    const app = read('src/App.tsx')
+    assert.match(app, /isProduction/)
+    assert.ok(app.includes('Checkout is unavailable right now'), 'prod checkout guard missing')
+    assert.ok(app.includes('Sign-in is unavailable'), 'prod auth copy missing')
+    assert.ok(app.includes('Place demo order'), 'dev demo fallback must remain for local dev')
+    const lib = read('src/lib/supabase.ts')
+    assert.match(lib, /isProduction/)
+  })
+
   it('rule mirror stays in sync with src/lib/orderValidation.ts', () => {
     const src = read('src/lib/orderValidation.ts')
     assert.ok(src.includes('FREE_DELIVERY_THRESHOLD = 50000') || src.includes('50000'))
